@@ -1,0 +1,60 @@
+version: '3.8'
+services:
+  connect:
+    image: clinicmasterwarehouse:latest
+    container_name: clinicmasterwarehouse
+    hostname: clinicmasterwarehouse
+    ports:
+      - "8083:8083"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      CONNECT_GROUP_ID: connect-${FACILITY_DHIS2_CODE}-cluster
+      CONNECT_CONFIG_STORAGE_TOPIC: connect-${FACILITY_DHIS2_CODE}-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: connect-${FACILITY_DHIS2_CODE}-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: connect-${FACILITY_DHIS2_CODE}-status
+      CONNECT_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: 'true'
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: 'true'
+      CONNECT_SECURITY_PROTOCOL: ${CONNECT_SECURITY_PROTOCOL:-SASL_SSL}
+      CONNECT_SASL_MECHANISM: ${CONNECT_SASL_MECHANISM:-SCRAM-SHA-256}
+      CONNECT_SASL_JAAS_CONFIG: org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_USER}" password="${KAFKA_PASS}";
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-1433}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      FACILITY_NAME: ${FACILITY_NAME}
+      FACILITY_DHIS2_CODE: ${FACILITY_DHIS2_CODE}
+    volumes:
+      - ./scripts:/opt/scripts:ro
+    networks:
+      - facility-net
+
+  init-connector:
+    image: curlimages/curl:8.10.1
+    container_name: init-connector
+    depends_on:
+      - connect
+    entrypoint: ["/bin/sh","-lc","sh /opt/scripts/init-connector.sh"]
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-1433}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      FACILITY_NAME: ${FACILITY_NAME}
+      FACILITY_DHIS2_CODE: ${FACILITY_DHIS2_CODE}
+    volumes:
+      - ./scripts:/opt/scripts:ro
+    networks:
+      - facility-net
+    restart: "no"
+
+networks:
+  facility-net:
+    driver: bridge

@@ -1,0 +1,51 @@
+{
+  "name": "__FACILITY_DHIS2_CODE__-sqlserver-source",
+  "config": {
+    "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
+    "tasks.max": "2",
+
+    "database.hostname": "__DB_HOST__",
+    "database.port": "__DB_PORT__",
+    "database.user": "__DB_USER__",
+    "database.password": "__DB_PASS__",
+    "database.names": "__DB_NAME__",
+
+    "topic.prefix": "clinicmasterwarehouse-sqlserver",
+
+    "snapshot.mode": "when_needed",
+    "table.include.list": "dbo\\..*",
+
+    "schema.history.internal.kafka.bootstrap.servers": "__KAFKA_BOOTSTRAP_SERVERS__",
+    "schema.history.internal.kafka.topic": "__FACILITY_DHIS2_CODE__.clinicmaster.history",
+
+    "include.schema.changes": "true",
+
+    "transforms": "unwrap,addFacilityCodeValue,addFacilityNameValue,addFacilityCodeKey",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": "false",
+    "transforms.unwrap.add.headers": "op,source.ts_ms",
+
+    "transforms.addFacilityCodeValue.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+    "transforms.addFacilityCodeValue.static.field": "facility_dhis2_code",
+    "transforms.addFacilityCodeValue.static.value": "__FACILITY_DHIS2_CODE__",
+
+    "transforms.addFacilityNameValue.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+    "transforms.addFacilityNameValue.static.field": "facility_name",
+    "transforms.addFacilityNameValue.static.value": "__FACILITY_NAME__",
+
+    "transforms.addFacilityCodeKey.type": "org.apache.kafka.connect.transforms.InsertField$Key",
+    "transforms.addFacilityCodeKey.static.field": "facility_dhis2_code",
+    "transforms.addFacilityCodeKey.static.value": "__FACILITY_DHIS2_CODE__",
+
+    "heartbeat.interval.ms": "30000",
+    "openlineage.integration.enabled": "false",
+
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "true",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "true",
+
+    "database.encrypt": "false",
+    "database.trustServerCertificate": "true"
+  }
+}

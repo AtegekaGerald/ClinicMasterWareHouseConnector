@@ -1,0 +1,42 @@
+{
+    "name": "postgres-multi-table-sink",
+    "config": {
+      "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+      "tasks.max": "4",
+      "topics.regex": "clinicmasterwarehouse-sqlserver\\..*\\.dbo\\..*", 
+      "connection.url": "jdbc:postgresql://192.168.1.81:5432/clinicmaster_datawarehouse",
+      "connection.user": "postgres",
+      "connection.password": "12345_CIL",
+  
+      "auto.create": "true",
+      "auto.evolve": "true",
+      "quote.identifiers": "true",
+  
+      "insert.mode": "upsert",
+      "pk.mode": "kafka", 
+  
+      "transforms": "unwrap,regexRouter", 
+      "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+      "transforms.unwrap.drop.tombstones": "false",
+  
+      "transforms.regexRouter.type": "org.apache.kafka.connect.transforms.RegexRouter",
+      "transforms.regexRouter.regex": "^clinicmasterwarehouse-sqlserver\\.([^.]+)\\.dbo\\.([^.]+)$",
+      "transforms.regexRouter.replacement": "$2",
+  
+      "table.name.format": "public.${topic}",
+  
+      "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+      "key.converter.schemas.enable": "true",
+      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+      "value.converter.schemas.enable": "true",
+  
+      "errors.tolerance": "all", 
+      "errors.log.enable": "true",
+      "errors.log.include.messages": "true",
+      "errors.deadletterqueue.topic.name": "sink-dlq",
+      "errors.deadletterqueue.topic.replication.factor": "1",
+    //   "batch.size": "1000",
+    //   "max.batch.size": "2000",
+      "linger.ms": "500" 
+    }
+  }
